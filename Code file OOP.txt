@@ -1,0 +1,213 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+using namespace std;
+
+class Guest {
+public:
+    string name;
+    int roomNumber;
+    int days;
+    double totalBill;
+
+    Guest(string _name, int _roomNumber, int _days, double _totalBill) {
+        name = _name;
+        roomNumber = _roomNumber;
+        days = _days;
+        totalBill = _totalBill;
+    }
+};
+
+class Hotel {
+public:
+    struct Room {
+        int roomNumber;
+        string roomType;
+        double roomPrice;
+        bool isOccupied;
+    };
+
+    vector<Room> rooms;
+    vector<Guest> guests;
+
+    Hotel() {
+        // Initialize rooms with some sample data
+        rooms.push_back({101, "Single", 100.0, false});
+        rooms.push_back({102, "Double", 150.0, false});
+        rooms.push_back({103, "Suite", 200.0, false});
+    }
+
+    void addRoomRecord() {
+        int roomNumber;
+        string roomType;
+        double roomPrice;
+
+        cout << "Enter room number: ";
+        cin >> roomNumber;
+
+        cout << "Enter room type (e.g., Single/Double/Suite): ";
+        cin.ignore(); // Clear the newline character left in the buffer
+        getline(cin, roomType);
+
+        cout << "Enter room price: ";
+        cin >> roomPrice;
+
+        rooms.push_back({roomNumber, roomType, roomPrice, false});
+    }
+
+    void showRoomRecords() const {
+        cout << "Room Records:\n";
+        for (const auto& room : rooms) {
+            cout << "Room Number: " << room.roomNumber << ", Type: " << room.roomType << ", Price: " << room.roomPrice;
+            if (room.isOccupied) {
+                cout << ", Status: Occupied";
+            } else {
+                cout << ", Status: Available";
+            }
+            cout << endl;
+        }
+    }
+
+    void checkAvailability() const {
+        int roomNumber;
+        cout << "Enter room number to check availability: ";
+        cin >> roomNumber;
+
+        for (const auto& room : rooms) {
+            if (room.roomNumber == roomNumber) {
+                cout << "Room available - Room Number: " << room.roomNumber << ", Type: " << room.roomType << ", Price: " << room.roomPrice << endl;
+                return;
+            }
+        }
+        cout << "Room not found." << endl;
+    }
+
+    void checkIn() {
+        int roomNumber;
+        string guestName;
+        int stayDays;
+
+        cout << "Enter room number for check-in: ";
+        cin >> roomNumber;
+
+        for (auto& room : rooms) {
+            if (room.roomNumber == roomNumber && !room.isOccupied) {
+                room.isOccupied = true;
+                cout << "Enter guest name: ";
+                cin.ignore();
+                getline(cin, guestName);
+                cout << "Enter number of days to stay: ";
+                cin >> stayDays;
+                double totalBill = stayDays * room.roomPrice;
+                guests.push_back(Guest(guestName, roomNumber, stayDays, totalBill));
+                cout << "Guest " << guestName << " has checked in to Room " << roomNumber << " for " << stayDays << " days." << endl;
+                return;
+            }
+        }
+        cout << "Room not available for check-in or does not exist." << endl;
+    }
+
+    void checkOut() {
+        int roomNumber;
+
+        cout << "Enter room number for check-out: ";
+        cin >> roomNumber;
+
+        for (auto& room : rooms) {
+            if (room.roomNumber == roomNumber && room.isOccupied) {
+                for (auto& guest : guests) {
+                    if (guest.roomNumber == roomNumber) {
+                        cout << "Guest " << guest.name << " has checked out from Room " << roomNumber << "." << endl;
+                        room.isOccupied = false;
+                        return;
+                    }
+                }
+            }
+        }
+        cout << "Room not occupied or does not exist." << endl;
+    }
+
+    void writeToFile() {
+        ofstream fout("hotel_records.txt", ios_base::app);
+        if (fout.is_open()) {
+            fout << "Room Records:\n";
+            for (const auto& room : rooms) {
+                fout << "Room Number: " << room.roomNumber << ", Type: " << room.roomType << ", Price: " << room.roomPrice;
+                if (room.isOccupied) {
+                    fout << ", Status: Occupied";
+                } else {
+                    fout << ", Status: Available";
+                }
+                fout << endl;
+            }
+            fout.close();
+            cout << "Data has been saved to 'hotel_records.txt'." << endl;
+        } else {
+            cerr << "Error: Unable to open the file for writing." << endl;
+        }
+    }
+
+    void readFromFile() {
+        ifstream fin("hotel_records.txt");
+        if (fin.is_open()) {
+            string line;
+            while (getline(fin, line)) {
+                cout << line << endl; // Display the read data (you can modify this to parse and use the data as needed)
+            }
+            fin.close();
+        } else {
+            cout << "Error opening file for reading." << endl;
+        }
+    }
+};
+
+int main() {
+    Hotel hotel;
+
+    int choice;
+
+    do {
+        cout << "Hotel Management System\n";
+        cout << "1. Add Room Record\n";
+        cout << "2. Show Room Records\n";
+        cout << "3. Check Availability\n";
+        cout << "4. Check-In Guest\n";
+        cout << "5. Check-Out Guest\n";
+        cout << "6. Save Data to File\n";
+        cout << "7. Load Data from File\n";
+        cout << "8. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                hotel.addRoomRecord();
+                break;
+            case 2:
+                hotel.showRoomRecords();
+                break;
+            case 3:
+                hotel.checkAvailability();
+                break;
+            case 4:
+                hotel.checkIn();
+                break;
+            case 5:
+                hotel.checkOut();
+                break;
+            case 6:
+                hotel.writeToFile();
+                break;
+            case 7:
+                hotel.readFromFile();
+                break;
+            case 8:
+                cout << "Exiting the program.\n";
+                break;
+            default:
+                cout << "Invalid choice. Please enter a valid option.\n";
+        }
+    } while (choice != 8);
+
+    return 0;
+}
